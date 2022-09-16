@@ -1,6 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <unistd.h>
+#include <fstream>
 
 using namespace std;
 
@@ -11,6 +13,7 @@ private:
     string author;
     string date_published;
 public:
+    Book();
     Book(string t, string a, string d);
     string getTitle();
     string getAuthor();
@@ -20,6 +23,8 @@ public:
     void setDatePublished(string d);
     void printBook();
 };
+
+vector<Book*> bookArr;
 
 /*********************************************************************
  * 
@@ -41,8 +46,78 @@ Book* addBook()
     cout<<"Enter date published:\n";
     getline(cin, date_published);
     Book* book = new Book(title, author, date_published);
+    cout<<endl<<"--Added book--"<<endl;
     book->printBook();
+    sleep(2);
     return book;
+}
+
+/*********************************************************************
+ * 
+ * showBooks
+ * 
+ * Params: None
+ * Returns: None
+ * 
+ * ******************************************************************/
+
+void showBooks()
+{
+    system("clear");
+    cout<<"Books in inventory:"<<endl;
+    for (Book* book: bookArr)
+    {
+        book->printBook();
+        cout<<endl;
+    }
+}
+
+/*********************************************************************
+ * 
+ * writeBook
+ * 
+ * Params: Book object
+ * Returns: status int
+ * 
+ * ******************************************************************/
+
+int writeBook(Book* book)
+{
+    ofstream bookFile;
+    bookFile.open("books.txt", ios::app);
+    bookFile<<book->getTitle()<<endl;
+    bookFile<<book->getAuthor()<<endl;
+    bookFile<<book->getDatePublished()<<endl;
+    bookFile.close();
+    return 0;
+}
+
+/*********************************************************************
+ * 
+ * loadBooks
+ * 
+ * Params: None
+ * Returns: None
+ * 
+ * ******************************************************************/
+
+void loadBooks()
+{
+    string title, author, date_published;
+    ifstream bookFile;
+    bookFile.open("books.txt");
+    while (getline(bookFile, title))
+    {
+        Book* book = new Book();
+        getline(bookFile, author);
+        getline(bookFile, date_published);
+        book->setTitle(title);
+        book->setAuthor(author);
+        book->setDatePublished(date_published);
+        bookArr.push_back(book);
+    }
+    bookFile.close();
+    
 }
 
 /*********************************************************************
@@ -54,8 +129,10 @@ Book* addBook()
 int main()
 {
     int choice;
-    vector<Book*> bookArr;
+    Book* book;
 
+    loadBooks();
+    
     while (1)
     {
         system("clear");
@@ -69,14 +146,15 @@ int main()
 
         switch(choice) {
             case 1:
-                bookArr.push_back(addBook());
+                book = addBook();
+                bookArr.push_back(book);
+                writeBook(book);
                 break;
             case 2:
-                cout<<"Books in inventory:"<<endl;
-                for (Book* book: bookArr)
-                {
-                    cout<<book->getTitle()<<endl;
-                }
+                showBooks();
+                cout<<"Press enter to return to menu"<<endl;
+                cin.ignore();
+                cin.ignore();
                 break;
             case 3:
                 exit(0);
@@ -85,6 +163,13 @@ int main()
 
     }
     return 0;
+}
+
+Book::Book()
+{
+    title = "";
+    author = "";
+    date_published = "";
 }
 
 Book::Book(string t, string a, string d)
